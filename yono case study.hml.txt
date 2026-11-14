@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YONO SBI — Smooth Banking Prototype (Discovery Draft)</title>
+  <style>
+    :root {
+      --sbi-navy: #1b1464;
+      --sbi-blue: #0055a5;
+      --sbi-accent: #00a8e8;
+      --sbi-magenta: #c8107e;
+      --bg-page: #eef2f7;
+      --bg-app: #f6f8fc;
+      --surface: #ffffff;
+      --text-main: #111827;
+      --text-muted: #4b5563;
+      --border: #d1d5db;
+      --success-bg: #ecfdf5;
+      --success-text: #065f46;
+      --success-border: #10b981;
+      --warn-bg: #fffbeb;
+      --warn-text: #92400e;
+      --warn-border: #f59e0b;
+      --error-bg: #fef2f2;
+      --error-text: #991b1b;
+      --error-border: #ef4444;
+      --radius: 14px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      background: var(--bg-page);
+      color: var(--text-main);
+      line-height: 1.45;
+    }
+
+    /* Layout: Phone + PRD Simulator Dock */
+    .workspace {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 24px;
+      padding: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* Mobile Device Frame */
+    .phone-frame {
+      width: 390px;
+      height: 780px;
+      background: var(--bg-app);
+      border: 10px solid #1f2937;
+      border-radius: 38px;
+      box-shadow: 0 20px 45px rgba(17, 24, 39, 0.22);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .status-bar {
+      background: var(--sbi-navy);
+      color: #fff;
+      font-size: 12px;
+      padding: 8px 18px 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .app-header {
+      background: linear-gradient(135deg, var(--sbi-navy), var(--sbi-blue));
+      color: #fff;
+      padding: 12px 16px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .app-header h1 {
+      font-size: 16px;
+      margin: 0;
+      font-weight: 700;
+    }
+
+    .header-sub {
+      font-size: 11px;
+      opacity: 0.88;
+    }
+
+    .app-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px;
+    }
+
+    /* Accessible Interactive Controls (min 44px touch targets) */
+    button, .btn {
+      font-family: inherit;
+      cursor: pointer;
+      min-height: 44px;
+      border-radius: 10px;
+      border: 1px solid transparent;
+      font-weight: 600;
+      font-size: 14px;
+      padding: 10px 14px;
+      transition: background 0.15s, opacity 0.15s;
+    }
+
+    button:focus-visible, input:focus-visible, select:focus-visible {
+      outline: 3px solid var(--sbi-accent);
+      outline-offset: 2px;
+    }
+
+    .btn-primary {
+      background: var(--sbi-blue);
+      color: #fff;
+      width: 100%;
+    }
+    .btn-primary:hover:not(:disabled) { background: var(--sbi-navy); }
+    .btn-primary:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      background: #fff;
+      color: var(--sbi-blue);
+      border: 1.5px solid var(--sbi-blue);
+      width: 100%;
+    }
+    .btn-ghost {
+      background: rgba(255,255,255,0.16);
+      color: #fff;
+      min-height: 36px;
+      padding: 6px 10px;
+      font-size: 12px;
+    }
+
+    /* Cards & Banners */
+    .card {
+      background: var(--surface);
+      border: 1px solid #e5e7eb;
+      border-radius: var(--radius);
+      padding: 14px;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+
+    .banner {
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 12px;
+      font-size: 13px;
+      border-left: 4px solid;
+    }
+    .banner-warn { background: var(--warn-bg); color: var(--warn-text); border-color: var(--warn-border); }
+    .banner-error { background: var(--error-bg); color: var(--error-text); border-color: var(--error-border); }
+    .banner-success { background: var(--success-bg); color: var(--success-text); border-color: var(--success-border); }
+    .banner-info { background: #eff6ff; color: #1e40af; border-color: #3b82f6; }
+
+    /* Balance Card */
+    .account-card {
+      background: linear-gradient(135deg, #1b1464 0%, #274b9f 100%);
+      color: #fff;
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+    .balance-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 6px 0;
+    }
+    .balance-amt {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+    .freshness-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(255,255,255,0.2);
+      font-size: 12px;
+    }
+    .fresh-pill {
+      padding: 2px 8px;
+      border-radius: 99px;
+      font-weight: 600;
+      font-size: 11px;
+    }
+    .fresh-ok { background: rgba(16, 185, 129, 0.25); color: #d1fae5; }
+    .fresh-stale { background: #fef3c7; color: #92400e; }
+
+    /* Quick Actions Grid */
+    .section-title {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin: 12px 0 8px;
+    }
+    .quick-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .quick-btn {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 12px;
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      color: var(--text-main);
+    }
+    .quick-btn:hover { border-color: var(--sbi-blue); background: #f8fbff; }
+    .quick-icon { font-size: 20px; }
+    .quick-label { font-size: 14px; font-weight: 700; }
+    .quick-sub { font-size: 11px; color: var(--text-muted); font-weight: 400; }
+
+    /* Search */
+    .search-input {
+      width: 100%;
+      min-height: 44px;
+      padding: 10px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+
+    /* Skeleton Loader */
+    .skeleton {
+      background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.2s infinite;
+      border-radius: 8px;
+      height: 16px;
+      margin-bottom: 8px;
+    }
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* Forms & Lists */
+    label.field-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .form-input {
+      width: 100%;
+      min-height: 44px;
+      padding: 10px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-size: 15px;
+      margin-bottom: 12px;
+    }
+
+    .bene-item {
+      width: 100%;
+      text-align: left;
+      background: #fff;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .bene-item.selected { border-color: var(--sbi-blue); background: #eff6ff; }
+    .bene-item.unavailable { background: #f9fafb; opacity: 0.85; border-style: dashed; }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .badge-success { background: var(--success-bg); color: var(--success-text); }
+    .badge-pending { background: var(--warn-bg); color: var(--warn-text); }
+    .badge-failed { background: var(--error-bg); color: var(--error-text); }
+
+    /* Bottom Nav */
+    .bottom-nav {
+      background: #fff;
+      border-top: 1px solid #e5e7eb;
+      display: flex;
+      justify-content: space-around;
+      padding: 6px 4px;
+    }
+    .nav-btn {
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 11px;
+      min-height: 44px;
+      padding: 4px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+    }
+    .nav-btn.active { color: var(--sbi-blue); font-weight: 700; }
+
+    /* PRD Simulator Panel */
+    .simulator-panel {
+      flex: 1;
+      min-width: 320px;
+      max-width: 520px;
+      background: #fff;
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.06);
+      align-self: flex-start;
+    }
+    .sim-header {
+      border-bottom: 2px solid #f3f4f6;
+      padding-bottom: 10px;
+      margin-bottom: 14px;
+    }
+    .sim-header h2 { margin: 0; font-size: 18px; color: var(--sbi-navy); }
+    .sim-header p { margin: 4px 0 0; font-size: 13px; color: var(--text-muted); }
+
+    .sim-group { margin-bottom: 16px; }
+    .sim-group h3 {
+      font-size: 13px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin: 0 0 8px;
+    }
+    .sim-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .sim-pill {
+      min-height: 36px;
+      padding: 6px 10px;
+      font-size: 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #f9fafb;
+      color: var(--text-main);
+    }
+    .sim-pill.active {
+      background: var(--sbi-navy);
+      color: #fff;
+      border-color: var(--sbi-navy);
+    }
+
+    .telemetry-box {
+      background: #111827;
+      color: #e5e7eb;
+      border-radius: 10px;
+      padding: 12px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 11px;
+      height: 240px;
+      overflow-y: auto;
+    }
+    .tel-entry {
+      border-bottom: 1px solid #374151;
+      padding: 5px 0;
+    }
+    .tel-event { color: #38bdf8; font-weight: 700; }
+    .tel-safe { color: #34d399; }
+
+    .kv-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      border-bottom: 1px solid #f3f4f6;
+      font-size: 13px;
+    }
+    .kv-row:last-child { border-bottom: none; }
+  </style>
+</head>
+<body>
+
+<div class="workspace">
+  <!-- MOBILE PROTOTYPE -->
+  <div class="phone-frame" role="application" aria-label="YONO SBI Prototype">
+    <div class="status-bar">
+      <span id="clock">9:41 AM</span>
+      <span id="netBadge">4G • Secure</span>
+    </div>
+
+    <header class="app-header">
+      <div>
+        <h1 id="headerTitle">YONO SBI</h1>
+        <div class="header-sub" id="headerSub">Discovery Prototype (PRD v1)</div>
+      </div>
+      <div id="headerAction"></div>
+    </header>
+
+    <main class="app-body" id="appBody"></main>
+
+    <nav class="bottom-nav" id="bottomNav" aria-label="Primary navigation" style="display:none;">
+      <button class="nav-btn" data-screen="dashboard" onclick="navigate('dashboard')">
+        <span>🏠</span><span>Home</span>
+      </button>
+      <button class="nav-btn" data-screen="transfer" onclick="navigate('transfer')">
+        <span>💸</span><span>Transfer</span>
+      </button>
+      <button class="nav-btn" data-screen="history" onclick="navigate('history')">
+        <span>🧾</span><span>Status</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- PRD EDGE-CASE & TELEMETRY SIMULATOR -->
+  <aside class="simulator-panel" aria-label="PRD Edge Case Simulator">
+    <div class="sim-header">
+      <h2>PRD Edge-Case &amp; Telemetry Simulator</h2>
+      <p>Test P0/P1 requirements, progressive loading, and Section 14 edge cases in real time.</p>
+    </div>
+
+    <div class="sim-group">
+      <h3>1. Dashboard &amp; Connectivity Mode (FR-03, FR-04, Sec 14)</h3>
+      <div class="sim-pills">
+        <button class="sim-pill active" id="mode-normal" onclick="setDashMode('normal')">Normal (&lt;0.5s)</button>
+        <button class="sim-pill" id="mode-slow_secondary" onclick="setDashMode('slow_secondary')">Slow Secondary Modules</button>
+        <button class="sim-pill" id="mode-stale" onclick="setDashMode('stale')">Stale Data (2h ago)</button>
+        <button class="sim-pill" id="mode-degraded" onclick="setDashMode('degraded')">High Load (Degraded)</button>
+      </div>
+    </div>
+
+    <div class="sim-group">
+      <h3>2. Payment Rail Outcome (FR-05, FR-07, US-03, US-04)</h3>
+      <div class="sim-pills">
+        <button class="sim-pill active" id="out-success" onclick="setOutcomeMode('success')">Authoritative Success</button>
+        <button class="sim-pill" id="out-pending" onclick="setOutcomeMode('pending')">Backend Timeout → Pending</button>
+        <button class="sim-pill" id="out-failed" onclick="setOutcomeMode('failed')">Authoritative Failure</button>
+      </div>
+    </div>
+
+    <div class="sim-group">
+      <h3>3. Quick Interrupt Scenarios (Sec 14)</h3>
+      <div class="sim-pills">
+        <button class="sim-pill" onclick="simulateInterruptedSession()">Simulate Session Expiry</button>
+        <button class="sim-pill" onclick="resetPrototype()">Reset Prototype</button>
+      </div>
+    </div>
+
+    <div class="sim-group">
+      <h3>4. Live Privacy-Safe Analytics Log (Section 12)</h3>
+      <p style="font-size:12px;color:var(--text-muted);margin:0 0 6px;">
+        Rule enforced: <strong>Never logs</strong> PINs, OTPs, passwords, or full account numbers.
+      </p>
+      <div class="telemetry-box" id="telemetryBox" aria-live="polite"></div>
+    </div>
+  </aside>
+</div>
+
+<script>
+  const state = {
+    loggedIn: false,
+    screen: 'login',
+    dashMode: 'normal',       // normal | slow_secondary | stale | degraded
+    outcomeMode: 'success',   // success | pending | failed
+    secondaryLoaded: true,
+    balanceVisible: true,
+    searchQuery: '',
+    selectedBeneId: 'b1',
+    amount: '2500',
+    rail: 'IMPS',
+    isSubmitting: false,
+    pendingTx: null,          // Unreconciled / interrupted tx (FR-07)
+    lastTxResult: null,
+    sessionExpiredNotice: false,
+    telemetry: [],
+    beneficiaries: [
+      { id: 'b1', name: 'Ananya Sharma', bank: 'HDFC Bank', maskedAcc: '•••• 9012', available: true },
+      { id: 'b2', name: 'Rajesh Verma', bank: 'ICICI Bank', maskedAcc: '•••• 3341', available: true },
+      { id: 'b3', name: 'Metro Utilities Ltd', bank: 'Axis Bank', maskedAcc: '•••• 7780', available: false, reason: 'Beneficiary bank rail temporarily under maintenance until 11:00 PM.' }
+    ],
+    transactions: [
+      {
+        refId: 'SBI992817401',
+        to: 'Ananya Sharma',
+        amount: 1500,
+        rail: 'UPI',
+        status: 'success',
+        source: 'NPCI Authoritative Switch',
+        timestamp: 'Today, 08:15 AM',
+        reason: 'Credited to beneficiary account.'
+      },
+      {
+        refId: 'SBI992816220',
+        to: 'City Broadband',
+        amount: 999,
+        rail: 'BBPS',
+        status: 'failed',
+        source: 'BBPS Central',
+        timestamp: 'Yesterday, 06:40 PM',
+        reason: 'Biller reference could not be validated. No amount was debited.'
+      }
+    ],
+    services: [
+      { id: 'transfer', icon: '💸', label: 'Fund Transfer', sub: 'IMPS, NEFT, UPI', eligible: true, action: () => navigate('transfer') },
+      { id: 'bills', icon: '🧾', label: 'Pay Bills', sub: 'Electricity, Mobile, DTH', eligible: true, action: () => showToast('Bill Payment journey is in scope (Demo routes to Transfer/Status).') },
+      { id: 'status', icon: '🔍', label: 'Transaction Centre', sub: 'Authoritative status & receipts', eligible: true, action: () => navigate('history') },
+      { id: 'bene', icon: '👥', label: 'Beneficiaries', sub: 'Manage saved payees', eligible: true, action: () => navigate('transfer') },
+      // Example of FR-02: ineligible/unsupported service on current device context is filtered out
+      { id: 'nfc', icon: '📶', label: 'Tap & Pay NFC', sub: 'Unavailable on this device', eligible: false }
+    ]
+  };
+
+  function logEvent(event, meta = {}) {
+    const time = new Date().toLocaleTimeString([], { hour12: false });
+    state.telemetry.unshift({ time, event, meta });
+    renderTelemetry();
+  }
+
+  function renderTelemetry() {
+    const box = document.getElementById('telemetryBox');
+    box.innerHTML = state.telemetry.map(t => `
+      <div class="tel-entry">
+        <span style="color:#9ca3af">[${t.time}]</span>
+        <span class="tel-event">${t.event}</span>
+        <div class="tel-safe">${JSON.stringify(t.meta)}</div>
+      </div>
+    `).join('');
+  }
+
+  function setDashMode(mode) {
+    state.dashMode = mode;
+    document.querySelectorAll('[id^="mode-"]').forEach(el => el.classList.remove('active'));
+    document.getElementById('mode-' + mode).classList.add('active');
+
+    const net = document.getElementById('netBadge');
+    net.textContent = mode === 'degraded' ? 'High Load • Critical Only' :
+                      mode === 'stale' ? 'Offline / Cached' : '4G • Secure';
+
+    if (mode === 'slow_secondary') {
+      state.secondaryLoaded = false;
+      render();
+      setTimeout(() => {
+        if (state.dashMode === 'slow_secondary') {
+          state.secondaryLoaded = true;
+          render();
+        }
+      }, 2800);
+    } else {
+      state.secondaryLoaded = true;
+      render();
+    }
+  }
+
+  function setOutcomeMode(mode) {
+    state.outcomeMode = mode;
+    document.querySelectorAll('[id^="out-"]').forEach(el => el.classList.remove('active'));
+    document.getElementById('out-' + mode).classList.add('active');
+  }
+
+  function simulateInterruptedSession() {
+    if (!state.loggedIn) return;
+    state.loggedIn = false;
+    state.sessionExpiredNotice = true;
+    logEvent('task_abandoned', { step: state.screen, reason: 'session_expiry' });
+    navigate('login');
+  }
+
+  function resetPrototype() {
+    state.loggedIn = false;
+    state.pendingTx = null;
+    state.lastTxResult = null;
+    state.sessionExpiredNotice = false;
+    state.searchQuery = '';
+    setDashMode('normal');
+    setOutcomeMode('success');
+    state.telemetry = [];
+    logEvent('app_launch', { app_version: '2.0.0-proto', os_cohort: 'web_sim', network_class: '4g' });
+    navigate('login');
+  }
+
+  function navigate(screen) {
+    state.screen = screen;
+    render();
+  }
+
+  function handleLogin() {
+    logEvent('login_started', { method: 'mpin_demo' });
+    state.loggedIn = true;
+    state.sessionExpiredNotice = false;
+    logEvent('login_success', { duration_ms: 420, credentials_logged: false });
+
+    // FR-03 / NFR: Essential dashboard usable independently
+    const dashStart = performance.now();
+    if (state.dashMode === 'slow_secondary') state.secondaryLoaded = false;
+    navigate('dashboard');
+    logEvent('dashboard_usable', {
+      time_to_usable_ms: Math.round(performance.now() - dashStart + 310),
+      critical_ready: true,
+      secondary_ready: state.secondaryLoaded
+    });
+
+    if (state.dashMode === 'slow_secondary') {
+      setTimeout(() => {
+        state.secondaryLoaded = true;
+        if (state.screen === 'dashboard') render();
+      }, 2500);
+    }
+  }
+
+  function refreshAccountData() {
+    if (state.dashMode === 'stale') {
+      setDashMode('normal');
+      showToast('Account balance refreshed from core banking.');
+    } else {
+      showToast('Account data is already up to date.');
+    }
+  }
+
+  function showToast(msg) {
+    const existing = document.getElementById('toastBanner');
+    if (existing) existing.remove();
+    const div = document.createElement('div');
+    div.id = 'toastBanner';
+    div.className = 'banner banner-info';
+    div.textContent = msg;
+    document.getElementById('appBody').prepend(div);
+    setTimeout(() => div.remove(), 3500);
+  }
+
+  function selectBene(id) {
+    state.selectedBeneId = id;
+    render();
+  }
+
+  function goToReview() {
+    const amt = Number(document.getElementById('amtInput').value);
+    if (!amt || amt <= 0 || amt > 100000) {
+      showToast('Please enter a valid amount between ₹1 and ₹1,00,000.');
+      return;
+    }
+    const bene = state.beneficiaries.find(b => b.id === state.selectedBeneId);
+    if (!bene || !bene.available) {
+      showToast('Selected beneficiary is currently unavailable. Please choose another payee.');
+      return;
+    }
+    state.amount = amt;
+    state.rail = document.getElementById('railSelect').value;
+    logEvent('transaction_started', { journey: 'fund_transfer', rail: state.rail });
+    navigate('review');
+  }
+
+  function submitTransfer(simulateCrash = false) {
+    // FR-06: Client-side interaction debounce + idempotency key
+    if (state.isSubmitting) return;
+    state.isSubmitting = true;
+
+    const idempotencyKey = 'idem_' + Math.random().toString(36).slice(2, 10);
+    const bene = state.beneficiaries.find(b => b.id === state.selectedBeneId);
+
+    logEvent('transaction_submitted', {
+      journey: 'fund_transfer',
+      rail: state.rail,
+      correlation_id: idempotencyKey
+    });
+
+    render(); // Shows processing state & disabled button
+
+    setTimeout(() => {
+      state.isSubmitting = false;
+
+      // FR-07 Edge Case: App closed / interrupted mid-transfer
+      if (simulateCrash) {
+        state.pendingTx = {
+          refId: 'SBI' + Math.floor(100000000 + Math.random() * 900000000),
+          idempotencyKey,
+          to: bene.name,
+          amount: Number(state.amount),
+          rail: state.rail,
+          timestamp: 'Just now',
+          status: 'pending',
+          source: 'Awaiting Core Banking / NPCI Reconciliation',
+          reason: 'Connection was interrupted before confirmation arrived.'
+        };
+        state.transactions.unshift(state.pendingTx);
+        logEvent('task_abandoned', { step: 'authorise_submit', correlation_id: idempotencyKey });
+        alert('Simulated App Close! Reopening YONO SBI to test FR-07 Safe Recovery.');
+        navigate('dashboard');
+        return;
+      }
+
+      const refId = 'SBI' + Math.floor(100000000 + Math.random() * 900000000);
+      const outcome = state.outcomeMode;
+
+      const tx = {
+        refId,
+        idempotencyKey,
+        to: bene.name,
+        amount: Number(state.amount),
+        rail: state.rail,
+        status: outcome,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        source: outcome === 'pending' ? 'Awaiting Authoritative Switch' : 'SBI Core Banking / NPCI',
+        reason: outcome === 'success'
+          ? 'Amount has been credited to the beneficiary account.'
+          : outcome === 'pending'
+          ? 'We did not receive final confirmation within the timeout window. Do not submit again until status is checked.'
+          : 'Beneficiary bank declined the request (Limit/Account rule). No money was debited.'
+      };
+
+      state.transactions.unshift(tx);
+      state.lastTxResult = tx;
+      if (outcome === 'pending') {
+        state.pendingTx = tx;
+      }
+
+      logEvent(`transaction_${outcome}`, {
+        rail: state.rail,
+        authoritative: outcome !== 'pending',
+        correlation_id: idempotencyKey
+      });
+
+      navigate('outcome');
+    }, 900);
+  }
+
+  function reconcilePendingTx(refId) {
+    const tx = state.transactions.find(t => t.refId === refId);
+    if (!tx) return;
+
+    logEvent('retry_attempted', { action: 'reconcile_first', original_state: tx.status, refId });
+
+    // Reconcile resolves pending -> authoritative success (or failed)
+    tx.status = 'success';
+    tx.source = 'NPCI Reconciled Authoritative Status';
+    tx.reason = 'Reconciliation complete: Original transfer succeeded. No second transfer is needed.';
+    if (state.pendingTx && state.pendingTx.refId === refId) {
+      state.pendingTx = null;
+    }
+    state.lastTxResult = tx;
+    logEvent('transaction_success', { reconciled: true, refId });
+    navigate('outcome');
+  }
+
+  function render() {
+    const body = document.getElementById('appBody');
+    const nav = document.getElementById('bottomNav');
+    const title = document.getElementById('headerTitle');
+    const sub = document.getElementById('headerSub');
+    const headerAction = document.getElementById('headerAction');
+
+    nav.style.display = state.loggedIn ? 'flex' : 'none';
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.screen === state.screen);
+    });
+
+    if (!state.loggedIn || state.screen === 'login') {
+      title.textContent = 'YONO SBI';
+      sub.textContent = 'Secure Login';
+      headerAction.innerHTML = '';
+      body.innerHTML = `
+        ${state.sessionExpiredNotice ? `
+          <div class="banner banner-warn">
+            <strong>Session expired for your security.</strong><br>
+            Please re-authenticate. Any non-sensitive progress has been safely handled.
+          </div>` : ''}
+        <div class="card" style="text-align:center; padding: 24px 16px;">
+          <div style="font-size:34px;margin-bottom:8px;">🏦</div>
+          <h2 style="margin:0 0 6px;font-size:20px;color:var(--sbi-navy);">Welcome back, Priya</h2>
+          <p style="margin:0 0 18px;font-size:13px;color:var(--text-muted);">
+            Sign in with your 6-digit MPIN or device biometrics.
+          </p>
+          <label class="field-label" for="mpinInput" style="text-align:left;">MPIN (Demo pre-filled)</label>
+          <input id="mpinInput" class="form-input" type="password" value="123456" aria-label="6-digit MPIN" />
+          <button class="btn-primary" onclick="handleLogin()">Login Securely</button>
+          <p style="font-size:11px;color:var(--text-muted);margin:12px 0 0;">
+            Protected by device binding &amp; TLS encryption.
+          </p>
+        </div>
+      `;
+      return;
+    }
+
+    headerAction.innerHTML = `<button class="btn-ghost" onclick="simulateInterruptedSession()">Lock</button>`;
+
+    if (state.screen === 'dashboard') {
+      title.textContent = 'Good Evening, Priya';
+      sub.textContent = 'Savings •••• 4821';
+
+      const isStale = state.dashMode === 'stale';
+      const isDegraded = state.dashMode === 'degraded';
+
+      const filteredServices = state.services.filter(s =>
+        s.eligible && (
+          !state.searchQuery ||
+          s.label.toLowerCase().includes(state.searchQuery.toLowerCase()) ||
+          s.sub.toLowerCase().includes(state.searchQuery.toLowerCase())
+        )
+      );
+
+      body.innerHTML = `
+        ${state.pendingTx ? `
+          <div class="banner banner-warn" role="alert">
+            <strong>Action Needed: Pending Transfer (${state.pendingTx.refId})</strong><br>
+            ₹${state.pendingTx.amount.toLocaleString('en-IN')} to ${state.pendingTx.to} was interrupted.
+            We must check its status before you start another transfer.
+            <div style="margin-top:8px;">
+              <button class="btn-primary" style="min-height:38px;padding:6px 10px;font-size:13px;"
+                onclick="reconcilePendingTx('${state.pendingTx.refId}')">
+                Check Transaction Status Now
+              </button>
+            </div>
+          </div>` : ''}
+
+        <!-- FR-01 & FR-03: Essential Account Card (Never blocked by secondary modules) -->
+        <section class="account-card" aria-label="Primary account summary">
+          <div style="font-size:12px;opacity:0.9;">Savings Account •••• 4821</div>
+          <div class="balance-row">
+            <div class="balance-amt">${state.balanceVisible ? '₹ 1,42,850.00' : '₹ ••••••••'}</div>
+            <button class="btn-ghost" aria-label="Toggle balance visibility"
+              onclick="state.balanceVisible=!state.balanceVisible;render();">
+              ${state.balanceVisible ? 'Hide' : 'Show'}
+            </button>
+          </div>
+          <div class="freshness-bar">
+            <span class="fresh-pill ${isStale ? 'fresh-stale' : 'fresh-ok'}">
+              ${isStale ? '⚠ Stale: Updated 2 hrs ago' : '● Fresh: Updated just now'}
+            </span>
+            <button class="btn-ghost" onclick="refreshAccountData()">↻ Refresh</button>
+          </div>
+        </section>
+
+        <!-- FR-08: Service Search -->
+        <input type="search" class="search-input" placeholder="Search services (e.g., Transfer, Bills, Status)..."
+          aria-label="Search mobile banking services"
+          value="${state.searchQuery}"
+          oninput="state.searchQuery=this.value;render();" />
+
+        <!-- FR-01 & FR-02: Eligible Quick Actions -->
+        <div class="section-title">Quick Actions</div>
+        ${filteredServices.length ? `
+          <div class="quick-grid">
+            ${filteredServices.map(s => `
+              <button class="quick-btn" onclick="logEvent('quick_action_selected',{action_id:'${s.id}'}); (${s.action.toString()})()">
+                <span class="quick-icon">${s.icon}</span>
+                <span class="quick-label">${s.label}</span>
+                <span class="quick-sub">${s.sub}</span>
+              </button>
+            `).join('')}
+          </div>` : `
+          <div class="card" style="text-align:center;color:var(--text-muted);font-size:13px;">
+            No eligible services match "<strong>${state.searchQuery}</strong>".
+          </div>`}
+
+        <!-- FR-03 & US-02: Secondary Modules load independently / degrade gracefully -->
+        <div class="section-title">Insights &amp; Updates (Secondary)</div>
+        ${isDegraded ? `
+          <div class="banner banner-info">
+            <strong>High server traffic:</strong> Secondary insights are paused to keep fund transfers and balances fast.
+          </div>` : !state.secondaryLoaded ? `
+          <div class="card" aria-busy="true">
+            <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">Loading spending insights independently...</div>
+            <div class="skeleton" style="width:70%"></div>
+            <div class="skeleton" style="width:90%"></div>
+          </div>` : `
+          <div class="card">
+            <div style="font-weight:700;font-size:14px;margin-bottom:4px;">Monthly Spend Summary</div>
+            <div style="font-size:13px;color:var(--text-muted);">
+              ₹18,450 spent this month across Bills &amp; UPI (12% lower than last month).
+            </div>
+          </div>`}
+      `;
+      return;
+    }
+
+    if (state.screen === 'transfer') {
+      title.textContent = 'Fund Transfer';
+      sub.textContent = 'Step 1 of 2 • Select Payee & Amount';
+      headerAction.innerHTML = `<button class="btn-ghost" onclick="navigate('dashboard')">Back</button>`;
+
+      if (state.pendingTx) {
+        body.innerHTML = `
+          <div class="banner banner-warn">
+            <strong>Transfer Temporarily Paused (Safe Recovery)</strong><br>
+            You have an unconfirmed transfer (<strong>${state.pendingTx.refId}</strong>) for ₹${state.pendingTx.amount}.
+            To prevent paying twice, please reconcile its status first.
+          </div>
+          <button class="btn-primary" onclick="reconcilePendingTx('${state.pendingTx.refId}')">
+            Reconcile Pending Transfer
+          </button>
+        `;
+        return;
+      }
+
+      body.innerHTML = `
+        <div class="section-title">Choose Beneficiary</div>
+        ${state.beneficiaries.map(b => `
+          <button class="bene-item ${state.selectedBeneId === b.id ? 'selected' : ''} ${!b.available ? 'unavailable' : ''}"
+            onclick="selectBene('${b.id}')">
+            <div>
+              <div style="font-weight:700;font-size:14px;">${b.name}</div>
+              <div style="font-size:12px;color:var(--text-muted);">${b.bank} • ${b.maskedAcc}</div>
+              ${!b.available ? `<div style="font-size:11px;color:var(--error-text);margin-top:4px;">⚠ ${b.reason}</div>` : ''}
+            </div>
+            <div>${state.selectedBeneId === b.id ? '✅' : b.available ? 'Select' : 'Unavailable'}</div>
+          </button>
+        `).join('')}
+
+        <div class="card">
+          <label class="field-label" for="railSelect">Transfer Method (Charges &amp; Limits)</label>
+          <select id="railSelect" class="form-input">
+            <option value="IMPS" ${state.rail === 'IMPS' ? 'selected' : ''}>IMPS — Instant • ₹0 Fee (Max ₹5L)</option>
+            <option value="UPI" ${state.rail === 'UPI' ? 'selected' : ''}>UPI — Instant • ₹0 Fee (Max ₹1L)</option>
+            <option value="NEFT" ${state.rail === 'NEFT' ? 'selected' : ''}>NEFT — 30 min • ₹0 Fee</option>
+          </select>
+
+          <label class="field-label" for="amtInput">Amount (₹)</label>
+          <input id="amtInput" type="number" class="form-input" value="${state.amount}" min="1" max="100000" />
+
+          <button class="btn-primary" onclick="goToReview()">Review Transfer</button>
+        </div>
+      `;
+      return;
+    }
+
+    if (state.screen === 'review') {
+      title.textContent = 'Review & Authorise';
+      sub.textContent = 'Step 2 of 2 • Confirm Details';
+      headerAction.innerHTML = `<button class="btn-ghost" onclick="navigate('transfer')">Back</button>`;
+
+      const bene = state.beneficiaries.find(b => b.id === state.selectedBeneId);
+      body.innerHTML = `
+        <div class="card">
+          <div class="kv-row"><span>Paying To</span><strong>${bene.name}</strong></div>
+          <div class="kv-row"><span>Bank &amp; Account</span><span>${bene.bank} (${bene.maskedAcc})</span></div>
+          <div class="kv-row"><span>Payment Rail</span><span>${state.rail}</span></div>
+          <div class="kv-row"><span>Charges</span><span>₹0.00</span></div>
+          <div class="kv-row" style="font-size:16px;"><span>Total Amount</span><strong>₹${Number(state.amount).toLocaleString('en-IN')}</strong></div>
+        </div>
+
+        <div class="card">
+          <label class="field-label" for="otpInput">Authorisation OTP (Demo pre-filled)</label>
+          <input id="otpInput" class="form-input" type="password" value="849201" />
+          <button class="btn-primary" id="confirmBtn" ${state.isSubmitting ? 'disabled' : ''} onclick="submitTransfer(false)">
+            ${state.isSubmitting ? 'Verifying with Bank...' : 'Confirm & Pay Safely'}
+          </button>
+          <p style="font-size:11px;color:var(--text-muted);margin:8px 0 12px;">
+            Duplicate protection active: rapid double-taps are blocked client &amp; server-side.
+          </p>
+          <button class="btn-secondary" ${state.isSubmitting ? 'disabled' : ''} onclick="submitTransfer(true)">
+            Test Edge Case: Simulate App Close Mid-Submit
+          </button>
+        </div>
+      `;
+      return;
+    }
+
+    if (state.screen === 'outcome') {
+      const tx = state.lastTxResult;
+      title.textContent = 'Transaction Status';
+      sub.textContent = tx.refId;
+      headerAction.innerHTML = '';
+
+      const isSuccess = tx.status === 'success';
+      const isPending = tx.status === 'pending';
+
+      body.innerHTML = `
+        <div class="banner ${isSuccess ? 'banner-success' : isPending ? 'banner-warn' : 'banner-error'}" role="status">
+          <div style="font-size:22px;margin-bottom:4px;">
+            ${isSuccess ? '✅ Transfer Successful' : isPending ? '⏳ Status Pending Confirmation' : '❌ Transfer Not Completed'}
+          </div>
+          <div>${tx.reason}</div>
+        </div>
+
+        <div class="card">
+          <div class="kv-row"><span>Amount</span><strong>₹${tx.amount.toLocaleString('en-IN')}</strong></div>
+          <div class="kv-row"><span>Beneficiary</span><span>${tx.to}</span></div>
+          <div class="kv-row"><span>Reference ID</span><strong>${tx.refId}</strong></div>
+          <div class="kv-row"><span>Timestamp</span><span>${tx.timestamp}</span></div>
+          <div class="kv-row"><span>Authoritative Source</span><span>${tx.source}</span></div>
+        </div>
+
+        ${isPending ? `
+          <button class="btn-primary" style="margin-bottom:10px;" onclick="reconcilePendingTx('${tx.refId}')">
+            Check Latest Status (Reconcile)
+          </button>
+          <button class="btn-secondary" disabled title="Retry locked until reconciled">
+            Retry Locked Until Status Confirmed
+          </button>
+        ` : isSuccess ? `
+          <button class="btn-primary" onclick="navigate('dashboard')">Done — Back to Home</button>
+        ` : `
+          <button class="btn-primary" style="margin-bottom:10px;" onclick="navigate('transfer')">Try Again Safely</button>
+          <button class="btn-secondary" onclick="navigate('dashboard')">Back to Home</button>
+        `}
+      `;
+      return;
+    }
+
+    if (state.screen === 'history') {
+      title.textContent = 'Transaction Centre';
+      sub.textContent = 'Authoritative Payment States';
+      headerAction.innerHTML = '';
+
+      body.innerHTML = `
+        <div class="section-title">Recent Transactions</div>
+        ${state.transactions.map(t => `
+          <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+              <strong>${t.to}</strong>
+              <span class="badge ${t.status === 'success' ? 'badge-success' : t.status === 'pending' ? 'badge-pending' : 'badge-failed'}">
+                ${t.status.toUpperCase()}
+              </span>
+            </div>
+            <div style="font-size:15px;font-weight:700;margin-bottom:4px;">₹${t.amount.toLocaleString('en-IN')} • ${t.rail}</div>
+            <div style="font-size:12px;color:var(--text-muted);">Ref: ${t.refId} • ${t.timestamp}</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">Source: ${t.source}</div>
+            ${t.status === 'pending' ? `
+              <button class="btn-primary" style="margin-top:10px;min-height:38px;font-size:13px;"
+                onclick="reconcilePendingTx('${t.refId}')">
+                Reconcile Pending Status
+              </button>` : ''}
+          </div>
+        `).join('')}
+      `;
+    }
+  }
+
+  // Initialize prototype
+  resetPrototype();
+</script>
+</body>
+</html>
